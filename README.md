@@ -8,3 +8,5 @@
 	<img alt="GitHub contributors" src="https://img.shields.io/github/contributors/the-amaya/optGcode?style=plastic">
 	<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/the-amaya/optGcode?style=plastic">
 </p>
+
+take gcode and do a poor job trying to optimize it
