@@ -55,8 +55,9 @@ startDistance = sum([ math.sqrt(sum([(cleancity(cities[(k+1) % count])[d] - clea
 print('starting fitness: %d' % (startDistance))
 
 plt.xkcd()
+plt.suptitle('starting fitness: %d' % (startDistance), ha='right')
 plt.plot([cleancity(cities[i % count])[0] for i in range(count + 1)], [cleancity(cities[i % count])[1] for i in range(count + 1)], 'or-');
-#plt.show()
+plt.show()
 
 while rnd < loop:
 	rnd += 1
@@ -72,7 +73,7 @@ while rnd < loop:
 		#moth = math.exp(dub)
 		#print(oldDistances, newDistances, dub, moth, pit)
 		#if moth > pit:
-		if newDistances < (oldDistances + 1.2):
+		if newDistances < (oldDistances + (temperature/1000)):
 			tour = copy.copy(newTour);
 			if show == 1:
 				nd = sum([ math.sqrt(sum([(cleancity(cities[newTour[(k+1) % count]])[d] - cleancity(cities[newTour[k % count]])[d])**2 for d in [0,1] ])) for k in range(count)])
@@ -93,6 +94,7 @@ finalDistances = sum([ math.sqrt(sum([(cleancity(cities[mtour[(k+1) % count]])[d
 print('final fitness: %d' % (finalDistances))
 
 plt.clf()
+plt.suptitle('final fitness: %d' % (finalDistances), ha='right')
 plt.plot([cleancity(cities[mtour[i % count]])[0] for i in range(count + 1)], [cleancity(cities[mtour[i % count]])[1] for i in range(count + 1)], 'or-');
 print('done')
 plt.show()
