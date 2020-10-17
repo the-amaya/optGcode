@@ -4,7 +4,7 @@ import sys
 import random, numpy, math, copy, matplotlib.pyplot as plt
 
 t = ['Z2.5400']
-loop = 10
+loop = 100
 show = 0
 
 with open(sys.argv[1]) as f:
@@ -63,7 +63,7 @@ while rnd < loop:
 	rnd += 1
 	#print('run %d of %d' % (rnd, loop))
 	random.shuffle(tour)
-	for temperature in numpy.logspace(0,5,num=100000)[::-1]:
+	for temperature in numpy.logspace(0,5,num=1000000)[::-1]:
 		[i,j] = sorted(random.sample(range(count),2));
 		newTour =  tour[:i] + tour[j:j+1] +  tour[i+1:j] + tour[i:i+1] + tour[j+1:];
 		oldDistances = sum([ math.sqrt(sum([(cleancity(cities[tour[(k+1) % count]])[d] - cleancity(cities[tour[k % count]])[d])**2 for d in [0,1] ])) for k in [j,j-1,i,i-1]])
@@ -73,7 +73,7 @@ while rnd < loop:
 		#moth = math.exp(dub)
 		#print(oldDistances, newDistances, dub, moth, pit)
 		#if moth > pit:
-		if newDistances < (oldDistances + (temperature/1000)):
+		if newDistances < (oldDistances + (temperature/10000)):
 			tour = copy.copy(newTour);
 			if show == 1:
 				nd = sum([ math.sqrt(sum([(cleancity(cities[newTour[(k+1) % count]])[d] - cleancity(cities[newTour[k % count]])[d])**2 for d in [0,1] ])) for k in range(count)])
