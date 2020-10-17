@@ -10,3 +10,10 @@
 </p>
 
 take gcode and do a poor job trying to optimize it
+
+
+The gcode that we start with looks something like this
+![start](https://raw.githubusercontent.com/the-amaya/optGcode/main/demo/start.png)
+
+After running this crappy code it looks something like this
+![finish](https://raw.githubusercontent.com/the-amaya/optGcode/main/demo/finish.png)

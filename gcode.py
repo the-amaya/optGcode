@@ -5,7 +5,7 @@ import random, numpy, math, copy, matplotlib.pyplot as plt
 
 t = ['Z2.5400']
 loop = 10
-show = 1
+show = 0
 
 with open(sys.argv[1]) as f:
 	lines = [line.rstrip() for line in f]
