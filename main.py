@@ -9,9 +9,9 @@ import random
 import sys
 
 t = ['Z2.5400']
-loop = 100
+loop = 1
 show = 0
-tmp = 10000000
+tmp = 10000
 printEnd = "\r"
 
 #board size
@@ -37,8 +37,9 @@ def splitlist(sequence, sep):
 
 
 def cleancity(city):
-	# print(city)
+	#print(city)
 	city = city[0]
+	#print(city)
 	# x = city.split()[2]
 	# y = city.split()[3]
 	x = float(city.split()[2][1:])
@@ -86,7 +87,7 @@ def saucy(localtour, cities, count, rnd):
 					plt.clf()
 					plt.suptitle('current fitness: %d  temp:%d run: %d -saucy time-' % (nd, temperature, rnd), ha='right')
 					plt.plot([cleancity(cities[plocaltour[i % count]])[0] for i in range(count + 1)], [cleancity(cities[plocaltour[i % count]])[1] for i in range(count + 1)], 'or-')
-		plt.pause(0.01)
+					plt.pause(0.01)
 		mlocaltour = list(plocaltour)
 	# print(f'\rsaucy temperature = {temperature}  health = {fitness(mlocaltour, range(count))}', end = printEnd)
 	# print(mlocaltour)
@@ -120,9 +121,9 @@ def randShuffle(tour, cities, count, rnd):
 	return tour
 
 
-def originalopt():
+def originalopt(l):
 	listlist = []
-	for ii in splitlist(infilelines, t):
+	for ii in splitlist(l, t):
 		listlist.append(ii)
 
 	listlist = list(filter(None, listlist))
@@ -145,7 +146,7 @@ def originalopt():
 	plt.suptitle('starting fitness: %d' % startDistance, ha='right')
 	plt.plot([cleancity(cities[i % count])[0] for i in range(count + 1)], [cleancity(cities[i % count])[1] for i in range(count + 1)], 'or-')
 	# plt.show()
-	plt.pause(5.0)
+	plt.pause(2.0)
 
 	while rnd < loop:
 		rnd += 1
@@ -169,6 +170,15 @@ def originalopt():
 	plt.plot([cleancity(cities[mtour[i % count]])[0] for i in range(count + 1)], [cleancity(cities[mtour[i % count]])[1] for i in range(count + 1)], 'or-')
 	print('done')
 	plt.show()
+	sort = []
+	oo = []
+	for i in range(count + 1):
+		sort.append(cities[mtour[i % count]])
+	#print(sort)
+	for i in range(count ):
+		for p in range(len(sort[i])):
+			oo.append(sort[i][p])
+	return oo
 
 
 def cleangcode(l):
@@ -179,6 +189,10 @@ def cleangcode(l):
 				pass
 			else:
 				oo.append(l)
+	if oo[0].split()[2] == 'Z2.5400':
+		oo.pop(0)
+	if oo[-1].split()[2] == 'Z3.5000':
+		oo.pop(-1)
 	return oo
 
 
@@ -219,8 +233,9 @@ def transposegcode(l, mx, my):
 	return oo
 
 
-def dumpoutput(l):
-	w = open('output.txt', 'w')
+def dumpoutput(l, n):
+	n = str(n) + '.txt'
+	w = open(n, 'w')
 	for l in l:
 		w.write(l + "\n")
 
@@ -269,17 +284,30 @@ def plothelp(l):
 	plt.show()
 
 
+def fixlinenumbers(l):
+	oo = []
+	pad = len(str(len(l) * 10))
+	for i in range(len(l)):
+		num = i * 10
+		num = '{num:0{width}}'.format(num=num, width=pad)
+		linelist = l[i].split()
+		linelist[0] = ('N' + str(num))
+		line = ' '.join(linelist)
+		oo.append(line)
+	return oo
+
 
 while True:
 	# os.system('clear')
 	print('Please use the following commands (do not include parenthesies in your commands)')
 	print('min-size -this function will determine the minimum xy size of a gcode file')
 	print('nest -this function will attempt to nest gcode -currently uses a hard coded board size')
+	print('the \'test\' function is undocumented. currently it runs a short optimization routine')
 
 	usrip = input()
 
 	if usrip == 'min-size':
-		dumpoutput(transposegcode(infilelines, -minsize(infilelines)[0], -minsize(infilelines)[1]))
+		dumpoutput(transposegcode(infilelines, -minsize(infilelines)[0], -minsize(infilelines)[1]), 'min')
 
 	elif usrip == 'nest':
 		cleancode = cleangcode(infilelines)
@@ -290,7 +318,10 @@ while True:
 		plothelp(minimizedcode)
 		nestedgcode = nestmake(minimizedcode, nestx, nesty, offx, offy, totx, toty)
 		plothelp(nestedgcode)
-		dumpoutput(nestedgcode)
+		dumpoutput(nestedgcode, 'output')
+	
+	elif usrip == 'test':
+		dumpoutput(fixlinenumbers(originalopt(cleangcode(infilelines))), 'test')
 
 	else:
 		print("You have two options, why dont you try again and see if you can figure this out")
