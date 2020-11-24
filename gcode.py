@@ -4,9 +4,9 @@ import sys
 import random, numpy, math, copy, matplotlib.pyplot as plt
 
 t = ['Z2.5400']
-loop = 10
-show = 1
-tmp = 100000
+loop = 100
+show = 0
+tmp = 10000000
 printEnd = "\r"
 
 with open(sys.argv[1]) as f:
@@ -130,7 +130,7 @@ plt.xkcd()
 plt.suptitle('starting fitness: %d' % (startDistance), ha='right')
 plt.plot([cleancity(cities[i % count])[0] for i in range(count + 1)], [cleancity(cities[i % count])[1] for i in range(count + 1)], 'or-');
 #plt.show()
-plt.pause(0.05)
+plt.pause(5.0)
 
 while rnd < loop:
 	rnd += 1
@@ -139,7 +139,11 @@ while rnd < loop:
 	newpath = fitness(ctour, range(count))
 	print('fitness of run %d (lower is better): %d' % (rnd, newpath))
 	if newpath < oldpath:
-		mtour = ctour
+		mtour = list(ctour)
+		plt.clf()
+		plt.suptitle('overall best (shown): %d current run: %d' % (newpath, rnd), ha='right')
+		plt.plot([cleancity(cities[mtour[i % count]])[0] for i in range(count + 1)], [cleancity(cities[mtour[i % count]])[1] for i in range(count + 1)], 'or-');
+		plt.pause(0.05)
 
 #for i in range(loop):
 finalDistances = fitness(mtour, range(count))
