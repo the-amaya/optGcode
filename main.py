@@ -236,6 +236,8 @@ def transposegcode(l, mx, my):
 
 
 def dumpoutput(l, n):
+	l.insert(0, f'N0 G00 Z{zup}')
+	l = fixlinenumbers(l)
 	n = str(n) + '.txt'
 	w = open(n, 'w')
 	for l in l:
@@ -292,7 +294,7 @@ def fixlinenumbers(l):
 	pad = len(str(len(l) * 10))
 	for i in range(len(l)):
 		num = i * 10
-		num = '{num:0{width}}'.format(num=num, width=pad)
+		num = str(num).zfill(pad)
 		linelist = l[i].split()
 		linelist[0] = ('N' + str(num))
 		line = ' '.join(linelist)
@@ -338,7 +340,6 @@ def nesthandler(score, borders):
 	nestedgcode = nestmake(minimizedcode, nestx, nesty, offx, offy, totx, toty)
 	if score == 1:
 		scoresheet = scorelines(nestx, nesty, offx, offy, boardx, boardy, zdown, zup, borders)
-		#print(scoresheet)
 		for i in scoresheet:
 			nestedgcode.append(i)
 	plothelp(nestedgcode)
