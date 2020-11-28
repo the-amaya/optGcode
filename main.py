@@ -16,11 +16,12 @@ printEnd = "\r"
 
 #board size
 boardx, boardy = 90, 70
+zdown, zup = '0.2500', '2.5400'
 
 #with open(sys.argv[1]) as f:
 #	infilelines = [line.rstrip() for line in f]
 
-with open('untitled.bot.etch.tap') as f:
+with open('demo/untitled.bot.etch.tap') as f:
 	infilelines = [line.rstrip() for line in f]
 
 
@@ -49,6 +50,7 @@ def cleancity(city):
 
 
 def fitness(localtour, citylist, cities, count):
+	#TODO refactor this function
 	# print(citylist)
 	return sum([math.sqrt(sum(
 		[(cleancity(cities[localtour[(k + 1) % count]])[d] - cleancity(cities[localtour[k % count]])[d]) ** 2 for d in [0, 1]])) for k in citylist])
@@ -274,7 +276,8 @@ def plothelp(l):
 		for line in ii:
 			if len(line.split()) >= 4:
 				if line.split()[2][:1] == 'X' and line.split()[3][:1] == 'Y':
-					if float(line.split()[2][1:]) == 0 and float(line.split()[3][1:]) == 0:
+					if 1==2:#float(line.split()[2][1:]) == 0 and float(line.split()[3][1:]) == 0:
+						#todo this check is probably not needed here and it breaks plotting of the boarder
 						pass
 					else:
 						linelist = line.split()
@@ -297,6 +300,52 @@ def fixlinenumbers(l):
 	return oo
 
 
+def scorelines(xc, yc, xo, yo, xm, ym, etchdepth, zup, border):
+	nx = 0
+	ny = 0
+	oo = []
+	oo.append(f'N0 G00 Z{zup}')
+	for i in range(xc - 1):
+		nx = nx + xo
+		oo.append(f'N0 G00 X{nx} Y0.0')
+		oo.append(f'N0 G01 Z-{etchdepth} F200.00')
+		oo.append(f'N0 G01 X{nx} Y{ym} F200.00')
+		oo.append(f'N0 G00 Z{zup}')
+	for i in range(yc - 1):
+		ny = ny + yo
+		oo.append(f'N0 G00 X0.0 Y{ny}')
+		oo.append(f'N0 G01 Z-{etchdepth} F200.00')
+		oo.append(f'N0 G01 X{xm} Y{ny} F200.00')
+		oo.append(f'N0 G00 Z{zup}')
+	if border == 1:
+		oo.append(f'N0 G00 X0.0 Y0.0')
+		oo.append(f'N0 G01 Z-{etchdepth} F200.00')
+		oo.append(f'N0 G01 X0.0 Y{ym} F200.00')
+		oo.append(f'N0 G01 X{xm} Y{ym}')
+		oo.append(f'N0 G01 X{xm} Y0.0')
+		oo.append(f'N0 G01 X0.0 Y0.0')
+		oo.append(f'N0 G00 Z{zup}')
+	return oo
+
+
+def nesthandler(score, borders):
+	cleancode = cleangcode(infilelines)
+	plothelp(cleancode)
+	minx, miny, totx, toty = minsize(cleancode)
+	nestx, nesty, offx, offy = nestcalc(totx, toty)
+	minimizedcode = transposegcode(cleancode, -minx, -miny)
+	plothelp(minimizedcode)
+	nestedgcode = nestmake(minimizedcode, nestx, nesty, offx, offy, totx, toty)
+	if score == 1:
+		scoresheet = scorelines(nestx, nesty, offx, offy, boardx, boardy, zdown, zup, borders)
+		#print(scoresheet)
+		for i in scoresheet:
+			nestedgcode.append(i)
+	plothelp(nestedgcode)
+	dumpoutput(nestedgcode, 'output')
+
+#TODO handle file headers and footers
+
 while True:
 	# os.system('clear')
 	print('Please use the following commands (do not include parenthesies in your commands)')
@@ -310,15 +359,7 @@ while True:
 		dumpoutput(transposegcode(infilelines, -minsize(infilelines)[0], -minsize(infilelines)[1]), 'min')
 
 	elif usrip == 'nest':
-		cleancode = cleangcode(infilelines)
-		plothelp(cleancode)
-		minx, miny, totx, toty = minsize(cleancode)
-		nestx, nesty, offx, offy = nestcalc(totx, toty)
-		minimizedcode = transposegcode(cleancode, -minx, -miny)
-		plothelp(minimizedcode)
-		nestedgcode = nestmake(minimizedcode, nestx, nesty, offx, offy, totx, toty)
-		plothelp(nestedgcode)
-		dumpoutput(nestedgcode, 'output')
+		nesthandler(1, 1)
 	
 	elif usrip == 'test':
 		dumpoutput(fixlinenumbers(originalopt(cleangcode(infilelines))), 'test')
