@@ -21,7 +21,7 @@ zdown, zup = '0.2500', '2.5400'
 #with open(sys.argv[1]) as f:
 #	infilelines = [line.rstrip() for line in f]
 
-with open('demo/untitled.bot.etch.tap') as f:
+with open('v1.bot.drill.tap') as f:
 	infilelines = [line.rstrip() for line in f]
 
 
@@ -259,6 +259,8 @@ def nestmake(l, nestxcount, nestycount, offxmm, offymm, totx, toty):
 	oo = []
 	padx = (offxmm - totx) / 2
 	pady = (offymm - toty) / 2
+	#padx, pady = 1.7624999999999993, 4.981250000000001
+	#print(padx, pady)
 	for nsty in range(nestycount):
 		for nstx in range(nestxcount):
 			ttx = (nstx * offxmm) + padx
@@ -337,6 +339,8 @@ def nesthandler(score, borders):
 	cleancode = cleangcode(infilelines)
 	plothelp(cleancode)
 	minx, miny, totx, toty = minsize(cleancode)
+	#print(minx, miny, totx, toty)
+	#minx, miny, totx, toty = 17.2425, 18.5125, 26.475, 25.037499999999998
 	nestx, nesty, offx, offy = nestcalc(totx, toty)
 	minimizedcode = transposegcode(cleancode, -minx, -miny)
 	plothelp(minimizedcode)
@@ -349,6 +353,9 @@ def nesthandler(score, borders):
 	dumpoutput(nestedgcode, 'output')
 
 #TODO handle file headers and footers
+
+
+#TODO handle drill file with etch file offsets
 
 while True:
 	# os.system('clear')
@@ -363,7 +370,7 @@ while True:
 		dumpoutput(transposegcode(infilelines, -minsize(infilelines)[0], -minsize(infilelines)[1]), 'min')
 
 	elif usrip == 'nest':
-		nesthandler(1, 1)
+		nesthandler(0, 0)
 	
 	elif usrip == 'test':
 		dumpoutput(fixlinenumbers(originalopt(cleangcode(infilelines))), 'test')
