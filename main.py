@@ -10,7 +10,7 @@ import sys
 from tkinter import *
 
 
-t = ['Z2.5400']
+t = ['Z2.5400', 'M05']
 loop = 1
 show = 0
 tmp = 10000
@@ -23,15 +23,16 @@ zdown, zup = '0.2500', '2.5400'
 #with open(sys.argv[1]) as f:
 #	infilelines = [line.rstrip() for line in f]
 
-#with open('v1.bot.drill.tap') as f:
+#with open('silkscreen.tap') as f:
 #	infilelines = [line.rstrip() for line in f]
 
 
 settings = [
 	['etch', ''],
 	['drill', ''],
-	['score', ''],
-	['boarder', ''],
+	['screen', ''],
+	['score', '1'],
+	['boarder', '1'],
 	['boardx', ''],
 	['boardy', '']
 ]
@@ -203,10 +204,12 @@ def cleangcode(l):
 				pass
 			else:
 				oo.append(l)
-	if oo[0].split()[2] == 'Z2.5400':
-		oo.pop(0)
-	if oo[-1].split()[2] == 'Z3.5000':
-		oo.pop(-1)
+		if any(i in l.split()[1] for i in ['M03', 'M05']):
+			oo.append(l)
+	#if oo[0].split()[2] == 'Z2.5400':
+	#	oo.pop(0)
+	#if oo[-1].split()[2] == 'Z3.5000':
+	#	oo.pop(-1)
 	return oo
 
 
@@ -250,8 +253,8 @@ def transposegcode(l, mx, my):
 def dumpoutput(l, n):
 	l.insert(0, f'N0 G21')
 	l.insert(1, f'N0 G90')
-	l.insert(2, f'N0 G00 Z{zup}')
-	l.insert(3, f'N0 G00 X0.0000 Y0.0000')
+	#l.insert(2, f'N0 G00 Z{zup}')
+	l.insert(2, f'N0 G00 X0.0000 Y0.0000')
 	l = fixlinenumbers(l)
 	n = str(n) + '.txt'
 	w = open(n, 'w')
@@ -358,6 +361,17 @@ def scorelines(xc, yc, xo, yo, xm, ym, etchdepth, zup, score, border):
 	return oo
 
 
+def mirror(code, totx):
+	oo = []
+	for line in code:
+		if len(line.split()) >= 4:
+			if line.split()[2][:1] == 'X' and line.split()[3][:1] == 'Y':
+				linelist = line.split()
+				linelist[2] = ('X' + str(round((totx - float(linelist[2][1:])), 4)))
+				line = ' '.join(linelist)
+		oo.append(line)
+	return oo
+
 def nesthandler():
 	root.destroy()
 	cleanetch = cleangcode(filedigest(settings[0][1]))
@@ -367,7 +381,7 @@ def nesthandler():
 	minimizedcode = transposegcode(cleanetch, -minx, -miny)
 	plothelp(minimizedcode)
 	nestedetchcode, padx, pady = nestmake(minimizedcode, nestx, nesty, offx, offy, totx, toty)
-	scoresheet = scorelines(nestx, nesty, offx, offy, boardx, boardy, zdown, zup, settings[2][1], settings[3][1])
+	scoresheet = scorelines(nestx, nesty, offx, offy, boardx, boardy, zdown, zup, settings[3][1], settings[4][1])
 	for i in scoresheet:
 		nestedetchcode.append(i)
 	plothelp(nestedetchcode)
@@ -376,6 +390,12 @@ def nesthandler():
 	minimizeddrill = transposegcode(cleandrill, -minx, -miny)
 	nesteddrillcode = nestdrillmake(minimizeddrill, nestx, nesty, offx, offy, padx, pady)
 	dumpoutput(nesteddrillcode, 'drill')
+	cleanscreen = cleangcode(filedigest(settings[2][1]))
+	minimizedscreen = transposegcode(cleanscreen, -minx, -miny)
+	mirrorscreen = mirror(minimizedscreen, totx)
+	nestedscreen = nestdrillmake(mirrorscreen, nestx, nesty, offx, offy, padx, pady)
+	plothelp(nestedscreen)
+	dumpoutput(nestedscreen, 'screen')
 
 
 
@@ -384,49 +404,62 @@ def filedigest(fname):
 		infilelines = [line.rstrip() for line in f]
 		return infilelines
 
+
+#def screenhandle(l):
+#	with open(l) as l:
+	#TODO finish file handleing to automate the find/replace steps
+
 #TODO handle file headers and footers
 
+#TODO possibly script flatcam
 
-#TODO handle drill file with etch file offsets
 
-#def menu():
+def menu():
 	# os.system('clear')
-#	print('Please use the following commands (do not include parenthesies in your commands)')
-#	print('min-size -this function will determine the minimum xy size of a gcode file')
-#	print('nest -this function will attempt to nest gcode -currently uses a hard coded board size')
-#	print('the \'test\' function is undocumented. currently it runs a short optimization routine')
+	print('Please use the following commands (do not include parenthesies in your commands)')
+	print('min-size -this function will determine the minimum xy size of a gcode file')
+	print('nest -this function will attempt to nest gcode -currently uses a hard coded board size')
+	print('the \'test\' function is undocumented. currently it runs a short optimization routine')
 
-#	usrip = input()
+	usrip = input()
 
-#	if usrip == 'min-size':
-		#dumpoutput(transposegcode(infilelines, -minsize(infilelines)[0], -minsize(infilelines)[1]), 'min')
+	if usrip == 'min-size':
+		dumpoutput(transposegcode(infilelines, -minsize(infilelines)[0], -minsize(infilelines)[1]), 'min')
 
-#	elif usrip == 'nest':
-#		nesthandler(0, 0)
+	elif usrip == 'nest':
+		nesthandler(0, 0)
 
-#	elif usrip == 'test':
-		#dumpoutput(fixlinenumbers(originalopt(cleangcode(infilelines))), 'test')
+	elif usrip == 'test':
+		dumpoutput(fixlinenumbers(originalopt(cleangcode(infilelines))), 'test')
 
-#	else:
-#		print("You have two options, why dont you try again and see if you can figure this out")
-#		input()
+	else:
+		print("You have two options, why dont you try again and see if you can figure this out")
+		input()
 
 
 def asketchfile():
 	root1 = Tk()
-	file = filedialog.askopenfile(parent=root1, mode='rb', title=f'choose select a file')
+	file = filedialog.askopenfile(parent=root1, mode='rb', title=f'select an etch file')
 	root1.destroy()
 	settings[0][1] = file.name
 
 
 def askdrillfile():
 	root1 = Tk()
-	file = filedialog.askopenfile(parent=root1, mode='rb', title=f'choose select a file')
+	file = filedialog.askopenfile(parent=root1, mode='rb', title=f'select a drill file')
 	root1.destroy()
 	settings[1][1] = file.name
 
 
+def askscreenfile():
+	root1 = Tk()
+	file = filedialog.askopenfile(parent=root1, mode='rb', title=f'select a screen file')
+	root1.destroy()
+	settings[2][1] = file.name
+
+
 if __name__ == '__main__':
+#	menu()
 	root = Tk()
 	gscore = IntVar(False)
 	gboarder = IntVar(False)
@@ -435,12 +468,14 @@ if __name__ == '__main__':
 	g1 = Checkbutton(root, text='score boarder', variable=gboarder)
 	g2 = Button(root, text='select an etch file', command=asketchfile)
 	g3 = Button(root, text='select a drill file', command=askdrillfile)
-	g4 = Button(root, text='GO!', activebackground='green', command=nesthandler)
+	g4 = Button(root, text='select a screen file', command=askscreenfile)
+	g5 = Button(root, text='GO!', activebackground='green', command=nesthandler)
 	g.grid(row=0, column=0)
 	g1.grid(row=1, column=0)
 	g2.grid(row=3, column=0)
 	g3.grid(row=4, column=0)
-	g4.grid(row=10, column=2)
+	g4.grid(row=5, column=0)
+	g5.grid(row=10, column=2)
 	root.geometry("400x400+120+120")
 	root.mainloop()
 	print(settings, gscore, gboarder)
