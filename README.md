@@ -12,6 +12,12 @@
 
 ## new features!
 
+### laser etching!
+
+using CAM files and a bit of manual prep we can generate a gcode file to run a laser to etch the component side of the board.
+
+![nested silkscreen](https://raw.githubusercontent.com/the-amaya/optGcode/main/demo/silkscreen.png)
+
 ### nesting!
 
 You can now use this to nest g-code (non-rotationally) to fill out a PCB
