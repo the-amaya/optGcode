@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 import numpy
 import random
 import sys
+from tkinter import *
 
-t = ['Z2.5400']
+
+t = ['Z2.5400', 'M05']
 loop = 1
 show = 0
 tmp = 10000
@@ -21,8 +23,19 @@ zdown, zup = '0.2500', '2.5400'
 #with open(sys.argv[1]) as f:
 #	infilelines = [line.rstrip() for line in f]
 
-with open('demo/untitled.bot.etch.tap') as f:
-	infilelines = [line.rstrip() for line in f]
+#with open('silkscreen.tap') as f:
+#	infilelines = [line.rstrip() for line in f]
+
+
+settings = [
+	['etch', ''],
+	['drill', ''],
+	['screen', ''],
+	['score', '1'],
+	['boarder', '1'],
+	['boardx', ''],
+	['boardy', '']
+]
 
 
 def splitlist(sequence, sep):
@@ -191,10 +204,12 @@ def cleangcode(l):
 				pass
 			else:
 				oo.append(l)
-	if oo[0].split()[2] == 'Z2.5400':
-		oo.pop(0)
-	if oo[-1].split()[2] == 'Z3.5000':
-		oo.pop(-1)
+		if any(i in l.split()[1] for i in ['M03', 'M05']):
+			oo.append(l)
+	#if oo[0].split()[2] == 'Z2.5400':
+	#	oo.pop(0)
+	#if oo[-1].split()[2] == 'Z3.5000':
+	#	oo.pop(-1)
 	return oo
 
 
@@ -238,8 +253,8 @@ def transposegcode(l, mx, my):
 def dumpoutput(l, n):
 	l.insert(0, f'N0 G21')
 	l.insert(1, f'N0 G90')
-	l.insert(2, f'N0 G00 Z{zup}')
-	l.insert(3, f'N0 G00 X0.0000 Y0.0000')
+	#l.insert(2, f'N0 G00 Z{zup}')
+	l.insert(2, f'N0 G00 X0.0000 Y0.0000')
 	l = fixlinenumbers(l)
 	n = str(n) + '.txt'
 	w = open(n, 'w')
@@ -259,6 +274,18 @@ def nestmake(l, nestxcount, nestycount, offxmm, offymm, totx, toty):
 	oo = []
 	padx = (offxmm - totx) / 2
 	pady = (offymm - toty) / 2
+	for nsty in range(nestycount):
+		for nstx in range(nestxcount):
+			ttx = (nstx * offxmm) + padx
+			tty = (nsty * offymm) + pady
+			s = (transposegcode(l, ttx, tty))
+			for d in s:
+				oo.append(d)
+	return oo, padx, pady
+
+
+def nestdrillmake(l, nestxcount, nestycount, offxmm, offymm, padx, pady):
+	oo = []
 	for nsty in range(nestycount):
 		for nstx in range(nestxcount):
 			ttx = (nstx * offxmm) + padx
@@ -305,23 +332,24 @@ def fixlinenumbers(l):
 	return oo
 
 
-def scorelines(xc, yc, xo, yo, xm, ym, etchdepth, zup, border):
+def scorelines(xc, yc, xo, yo, xm, ym, etchdepth, zup, score, border):
 	nx = 0
 	ny = 0
 	oo = []
 	oo.append(f'N0 G00 Z{zup}')
-	for i in range(xc - 1):
-		nx = nx + xo
-		oo.append(f'N0 G00 X{nx} Y0.0')
-		oo.append(f'N0 G01 Z-{etchdepth} F200.00')
-		oo.append(f'N0 G01 X{nx} Y{ym} F200.00')
-		oo.append(f'N0 G00 Z{zup}')
-	for i in range(yc - 1):
-		ny = ny + yo
-		oo.append(f'N0 G00 X0.0 Y{ny}')
-		oo.append(f'N0 G01 Z-{etchdepth} F200.00')
-		oo.append(f'N0 G01 X{xm} Y{ny} F200.00')
-		oo.append(f'N0 G00 Z{zup}')
+	if score == 1:
+		for i in range(xc - 1):
+			nx = nx + xo
+			oo.append(f'N0 G00 X{nx} Y0.0')
+			oo.append(f'N0 G01 Z-{etchdepth} F200.00')
+			oo.append(f'N0 G01 X{nx} Y{ym} F200.00')
+			oo.append(f'N0 G00 Z{zup}')
+		for i in range(yc - 1):
+			ny = ny + yo
+			oo.append(f'N0 G00 X0.0 Y{ny}')
+			oo.append(f'N0 G01 Z-{etchdepth} F200.00')
+			oo.append(f'N0 G01 X{xm} Y{ny} F200.00')
+			oo.append(f'N0 G00 Z{zup}')
 	if border == 1:
 		oo.append(f'N0 G00 X0.0 Y0.0')
 		oo.append(f'N0 G01 Z-{etchdepth} F200.00')
@@ -333,24 +361,60 @@ def scorelines(xc, yc, xo, yo, xm, ym, etchdepth, zup, border):
 	return oo
 
 
-def nesthandler(score, borders):
-	cleancode = cleangcode(infilelines)
-	plothelp(cleancode)
-	minx, miny, totx, toty = minsize(cleancode)
+def mirror(code, totx):
+	oo = []
+	for line in code:
+		if len(line.split()) >= 4:
+			if line.split()[2][:1] == 'X' and line.split()[3][:1] == 'Y':
+				linelist = line.split()
+				linelist[2] = ('X' + str(round((totx - float(linelist[2][1:])), 4)))
+				line = ' '.join(linelist)
+		oo.append(line)
+	return oo
+
+def nesthandler():
+	root.destroy()
+	cleanetch = cleangcode(filedigest(settings[0][1]))
+	plothelp(cleanetch)
+	minx, miny, totx, toty = minsize(cleanetch)
 	nestx, nesty, offx, offy = nestcalc(totx, toty)
-	minimizedcode = transposegcode(cleancode, -minx, -miny)
+	minimizedcode = transposegcode(cleanetch, -minx, -miny)
 	plothelp(minimizedcode)
-	nestedgcode = nestmake(minimizedcode, nestx, nesty, offx, offy, totx, toty)
-	if score == 1:
-		scoresheet = scorelines(nestx, nesty, offx, offy, boardx, boardy, zdown, zup, borders)
-		for i in scoresheet:
-			nestedgcode.append(i)
-	plothelp(nestedgcode)
-	dumpoutput(nestedgcode, 'output')
+	nestedetchcode, padx, pady = nestmake(minimizedcode, nestx, nesty, offx, offy, totx, toty)
+	scoresheet = scorelines(nestx, nesty, offx, offy, boardx, boardy, zdown, zup, settings[3][1], settings[4][1])
+	for i in scoresheet:
+		nestedetchcode.append(i)
+	plothelp(nestedetchcode)
+	dumpoutput(nestedetchcode, 'etch')
+	cleandrill = cleangcode(filedigest(settings[1][1]))
+	minimizeddrill = transposegcode(cleandrill, -minx, -miny)
+	nesteddrillcode = nestdrillmake(minimizeddrill, nestx, nesty, offx, offy, padx, pady)
+	dumpoutput(nesteddrillcode, 'drill')
+	cleanscreen = cleangcode(filedigest(settings[2][1]))
+	minimizedscreen = transposegcode(cleanscreen, -minx, -miny)
+	mirrorscreen = mirror(minimizedscreen, totx)
+	nestedscreen = nestdrillmake(mirrorscreen, nestx, nesty, offx, offy, padx, pady)
+	plothelp(nestedscreen)
+	dumpoutput(nestedscreen, 'screen')
+
+
+
+def filedigest(fname):
+	with open(fname) as f:
+		infilelines = [line.rstrip() for line in f]
+		return infilelines
+
+
+#def screenhandle(l):
+#	with open(l) as l:
+	#TODO finish file handleing to automate the find/replace steps
 
 #TODO handle file headers and footers
 
-while True:
+#TODO possibly script flatcam
+
+
+def menu():
 	# os.system('clear')
 	print('Please use the following commands (do not include parenthesies in your commands)')
 	print('min-size -this function will determine the minimum xy size of a gcode file')
@@ -363,11 +427,55 @@ while True:
 		dumpoutput(transposegcode(infilelines, -minsize(infilelines)[0], -minsize(infilelines)[1]), 'min')
 
 	elif usrip == 'nest':
-		nesthandler(1, 1)
-	
+		nesthandler(0, 0)
+
 	elif usrip == 'test':
 		dumpoutput(fixlinenumbers(originalopt(cleangcode(infilelines))), 'test')
 
 	else:
 		print("You have two options, why dont you try again and see if you can figure this out")
 		input()
+
+
+def asketchfile():
+	root1 = Tk()
+	file = filedialog.askopenfile(parent=root1, mode='rb', title=f'select an etch file')
+	root1.destroy()
+	settings[0][1] = file.name
+
+
+def askdrillfile():
+	root1 = Tk()
+	file = filedialog.askopenfile(parent=root1, mode='rb', title=f'select a drill file')
+	root1.destroy()
+	settings[1][1] = file.name
+
+
+def askscreenfile():
+	root1 = Tk()
+	file = filedialog.askopenfile(parent=root1, mode='rb', title=f'select a screen file')
+	root1.destroy()
+	settings[2][1] = file.name
+
+
+if __name__ == '__main__':
+#	menu()
+	root = Tk()
+	gscore = IntVar(False)
+	gboarder = IntVar(False)
+	etchfile = StringVar()
+	g = Checkbutton(root, text='score lines', variable=gscore)
+	g1 = Checkbutton(root, text='score boarder', variable=gboarder)
+	g2 = Button(root, text='select an etch file', command=asketchfile)
+	g3 = Button(root, text='select a drill file', command=askdrillfile)
+	g4 = Button(root, text='select a screen file', command=askscreenfile)
+	g5 = Button(root, text='GO!', activebackground='green', command=nesthandler)
+	g.grid(row=0, column=0)
+	g1.grid(row=1, column=0)
+	g2.grid(row=3, column=0)
+	g3.grid(row=4, column=0)
+	g4.grid(row=5, column=0)
+	g5.grid(row=10, column=2)
+	root.geometry("400x400+120+120")
+	root.mainloop()
+	print(settings, gscore, gboarder)
