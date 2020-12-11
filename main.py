@@ -242,7 +242,7 @@ def dumpoutput(l, n):
 	l.insert(0, f'N0 G21')
 	l.insert(1, f'N0 G90')
 	#l.insert(2, f'N0 G00 Z{zup}')
-	l.insert(2, f'N0 G00 X0.0000 Y0.0000')
+	#l.insert(2, f'N0 G00 X0.0000 Y0.0000')
 	l = fixlinenumbers(l)
 	n = str(n) + '.txt'
 	w = open(n, 'w')
