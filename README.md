@@ -7,6 +7,7 @@
 	<img alt="GitHub" src="https://img.shields.io/github/license/the-amaya/optGcode?style=plastic">
 	<img alt="GitHub contributors" src="https://img.shields.io/github/contributors/the-amaya/optGcode?style=plastic">
 	<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/the-amaya/optGcode?style=plastic">
+	<img alt="Scrutinizer code quality (GitHub/Bitbucket)" src="https://img.shields.io/scrutinizer/quality/g/the-amaya/optGcode?style=plastic">
 </p>
 
 
