@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
 import math
+import os
+
 import matplotlib.pyplot as plt
 import numpy
 import random
+import sys
 from tkinter import *
 
 
@@ -13,9 +16,15 @@ show = 0
 tmp = 10000
 printEnd = "\r"
 
-# board size
+#board size
 boardx, boardy = 90, 70
 zdown, zup = '0.2500', '2.5400'
+
+#with open(sys.argv[1]) as f:
+#	infilelines = [line.rstrip() for line in f]
+
+#with open('silkscreen.tap') as f:
+#	infilelines = [line.rstrip() for line in f]
 
 
 settings = [
@@ -42,7 +51,9 @@ def splitlist(sequence, sep):
 
 
 def cleancity(city):
+	#print(city)
 	city = city[0]
+	#print(city)
 	# x = city.split()[2]
 	# y = city.split()[3]
 	x = float(city.split()[2][1:])
@@ -52,7 +63,8 @@ def cleancity(city):
 
 
 def fitness(localtour, citylist, cities, count):
-	# TODO refactor this function
+	#TODO refactor this function
+	# print(citylist)
 	return sum([math.sqrt(sum(
 		[(cleancity(cities[localtour[(k + 1) % count]])[d] - cleancity(cities[localtour[k % count]])[d]) ** 2 for d in [0, 1]])) for k in citylist])
 
@@ -101,7 +113,7 @@ def randShuffle(tour, cities, count, rnd):
 	# print('run %d of %d' % (rnd, loop))
 	# random.shuffle(tour)
 	for temperature in numpy.logspace(0, 5, num=tmp)[::-1]:
-		i, j = sorted(random.sample(range(count), 2))
+		[i, j] = sorted(random.sample(range(count), 2))
 		newTour = tour[:i] + tour[j:j + 1] + tour[i + 1:j] + tour[i:i + 1] + tour[j + 1:]
 		oldDistances = fitness(tour, [j, j - 1, i, i - 1], cities, count)
 		newDistances = fitness(newTour, [j, j - 1, i, i - 1], cities, count)
@@ -242,7 +254,7 @@ def dumpoutput(l, n):
 	l.insert(0, f'N0 G21')
 	l.insert(1, f'N0 G90')
 	#l.insert(2, f'N0 G00 Z{zup}')
-	#l.insert(2, f'N0 G00 X0.0000 Y0.0000')
+	l.insert(2, f'N0 G00 X0.0000 Y0.0000')
 	l = fixlinenumbers(l)
 	n = str(n) + '.txt'
 	w = open(n, 'w')
@@ -296,9 +308,13 @@ def plothelp(l):
 		for line in ii:
 			if len(line.split()) >= 4:
 				if line.split()[2][:1] == 'X' and line.split()[3][:1] == 'Y':
-					linelist = line.split()
-					xx.append(float(linelist[2][1:]))
-					yy.append(float(linelist[3][1:]))
+					if 1==2:#float(line.split()[2][1:]) == 0 and float(line.split()[3][1:]) == 0:
+						#todo this check is probably not needed here and it breaks plotting of the boarder
+						pass
+					else:
+						linelist = line.split()
+						xx.append(float(linelist[2][1:]))
+						yy.append(float(linelist[3][1:]))
 		ploter(xx, yy, {'marker': ''})
 	plt.show()
 
@@ -399,9 +415,6 @@ def filedigest(fname):
 
 
 def menu():
-	with open('silkscreen.tap') as f:
-		infilelines = [line.rstrip() for line in f]
-
 	# os.system('clear')
 	print('Please use the following commands (do not include parenthesies in your commands)')
 	print('min-size -this function will determine the minimum xy size of a gcode file')
@@ -414,7 +427,7 @@ def menu():
 		dumpoutput(transposegcode(infilelines, -minsize(infilelines)[0], -minsize(infilelines)[1]), 'min')
 
 	elif usrip == 'nest':
-		nesthandler()
+		nesthandler(0, 0)
 
 	elif usrip == 'test':
 		dumpoutput(fixlinenumbers(originalopt(cleangcode(infilelines))), 'test')
@@ -466,6 +479,3 @@ if __name__ == '__main__':
 	root.geometry("400x400+120+120")
 	root.mainloop()
 	print(settings, gscore, gboarder)
-
-else:
-	exit()
