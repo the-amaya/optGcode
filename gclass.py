@@ -159,13 +159,23 @@ class Gmove:
 			if i.type == 'XY':
 				return i.xy()
 
-	def fullxy(self):
+	def fullxy(self, newxy=''):
 		# returns the full xy list as a list[[x, y], [x, y]]
 		l = []
-		for i in self.lines:
-			if i.type == 'XY':
-				l.append(i.xy())
-		return l
+		if newxy == '':
+			for i in self.lines:
+				if i.type == 'XY':
+					l.append(i.xy())
+			return l
+		elif type(newxy) == list:
+			if len(newxy) == len(self):
+				for i in range(len(self)):
+					self.lines[i].xy(newxy[i])
+					# holy shit this will be cool if it works as expected
+			else:
+				raise IndexError(f'')
+		else:
+			raise TypeError(f'')
 
 
 
