@@ -22,6 +22,7 @@ class Gline:
 				# this may do something in the program in the future if I support other modes of operations
 				self.g = 'G90'
 		elif linetype == 'XY':
+			# TODO input handling to accept both int()s and ['Xint()', 'Yint()']
 			# xy lines will have a movement type of g, x and y cords and may include a speed as f
 			self.g = kwargs.get('g')
 			self.x = kwargs.get('x')
@@ -126,12 +127,53 @@ class Gline:
 				return self.fln
 			else:
 				raise LookupError('seems we dont have a line number to give you chief')
-		elif newfln[0] == 'N':
-			if int(newfln[1:]):
-				self.fln = newfln
+		elif newfln[0] == 'N' and int(newfln[1:]):
+			self.fln = newfln
 		else:
 			raise IOError(f'this module can be used to get or set a file line number in format "Nxxx"')
 
 
-	def print(self):
-		return
+
+class Gmove:
+
+
+	def __init__(self, type, glines):
+		self.type = type
+		self.lines = glines
+
+	def __repr__(self):
+		p = []
+		q = ['type', self.type]
+		p.append(q)
+		q = ['length', self.len()]
+		p.append(q)
+		q = ['start XY', self.startxy()]
+		p.append(q)
+		return p
+
+	def __len__(self):
+		return len(self.lines)
+
+	def startxy(self):
+		for i in self.lines:
+			if i.type == 'XY':
+				return i.xy()
+
+	def fullxy(self):
+		# returns the full xy list as a list[[x, y], [x, y]]
+		l = []
+		for i in self.lines:
+			if i.type == 'XY':
+				l.append(i.xy())
+		return l
+
+
+
+class Gfile:
+
+
+	def __init__(self):
+		pass
+
+	def __repr__(self):
+		pass
