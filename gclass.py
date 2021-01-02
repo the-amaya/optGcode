@@ -182,8 +182,44 @@ class Gmove:
 class Gfile:
 
 
-	def __init__(self):
-		pass
+	def __init__(self, type, gmoves):
+		self.type = type
+		self.moves = gmoves
 
 	def __repr__(self):
-		pass
+		p = []
+		q = ['type', self.type]
+		p.append(q)
+		q = ['number of moves', self.len()]
+		p.append(q)
+		r = 0
+		for i in self.moves:
+			r = r + i.len()
+		q = ['total number of lines', r]
+		p.append(q)
+		return p
+
+	def __len__(self):
+		return len(self.moves)
+
+	def movelist(self, newmoves=''):
+		if newmoves == '':
+			p = []
+			c = 0
+			for i in self.moves:
+				p.append([c, i.type, i.startsy()])
+				c = c + 1
+			return p
+		elif type(newmoves) == list:
+			if len(newmoves) == len(self):
+				for i in range(len(self)):
+					self.moves[i].fullxy(newxy=newmoves[i])
+
+	def movestart(self):
+		p = []
+		c = 0
+		for i in self.moves:
+			p.append([c, i.type, i.startsy()])
+			c = c + 1
+		return p
+		#TODO need a way to re-order moves with this information
