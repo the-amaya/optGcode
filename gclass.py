@@ -9,7 +9,7 @@ class Gline:
 		if linetype == 'comment':
 			# comment line
 			# ideally these will only be at teh start of the file
-			# but we will keep their absolute position in the file as best we can
+			# but we will keep their relative position in the file as best we can
 			self.comment = kwargs.get('comment')
 		elif linetype == 'G':
 			# G lines should include a 'g' kwarg equal to the supported gcode command.
@@ -138,6 +138,9 @@ class Gmove:
 
 
 	def __init__(self, type, glines):
+		# expects a type of move or "line block", i.e. comments at the begining of the file including setup info
+		# types expected are ['header', 'move', 'footer'] and glines is a list of gline() objects
+		#TODO determine if this is the types we want, also consider what would be required to support tool changes
 		self.type = type
 		self.lines = glines
 
@@ -161,6 +164,9 @@ class Gmove:
 
 	def fullxy(self, newxy=''):
 		# returns the full xy list as a list[[x, y], [x, y]]
+		# if supplied with newxy in the same format as returned
+		# by this function when called without arguments it will update the xy moves with the new values
+		#TODO these are wild claims which have not been evaluated by any testing body
 		l = []
 		if newxy == '':
 			for i in self.lines:
@@ -168,6 +174,7 @@ class Gmove:
 					l.append(i.xy())
 			return l
 		elif type(newxy) == list:
+			#TODO this indexing is broken, it is not considering non-xy line types, this needs added
 			if len(newxy) == len(self):
 				for i in range(len(self)):
 					self.lines[i].xy(newxy[i])
@@ -183,6 +190,8 @@ class Gfile:
 
 
 	def __init__(self, type, gmoves):
+		# supported 'type' = ['etch', 'drill', 'screen']
+		# gmoves expected as a list[] of gmove() objects
 		self.type = type
 		self.moves = gmoves
 
@@ -203,6 +212,8 @@ class Gfile:
 		return len(self.moves)
 
 	def movelist(self, newmoves=''):
+		# newmoves optional, expected as a list of lists in the same format as
+		# returned by this function when called without arguments: [[[x, y],[x, y]],[[x, y],[x, y]]]
 		if newmoves == '':
 			p = []
 			for i in self.moves:
@@ -214,6 +225,7 @@ class Gfile:
 					self.moves[i].fullxy(newxy=newmoves[i])
 
 	def movestart(self):
+		# returns a list of the start xy for each in the format [['index', 'type', '[x,y]'], ...]
 		p = []
 		c = 0
 		for i in self.moves:
@@ -222,6 +234,8 @@ class Gfile:
 		return p
 
 	def moveshuffle(self, newmoves):
+		# expects a list of index numbers for the new move order, len(newmoves) must match len(self)
+		# format should be [6, 4, 7, 2, 3, 1, 5, 8, 9]
 		if len(newmoves) == len(self):
 			shufflemoves = []
 			for i in newmoves:
