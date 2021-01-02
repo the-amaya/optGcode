@@ -86,6 +86,7 @@ class Gline:
 			raise TypeError(f'you can not call XY operations on a line of type {self.type}')
 
 	def z(self, z=''):
+		# return the 'z' value of a z line or update it if supplied with a new one
 		if self.type == 'Z':
 			if type(z) == float:
 				self.z = z
@@ -98,6 +99,7 @@ class Gline:
 			raise TypeError(f'you can not call Z operations on a line of type {self.type}')
 
 	def typechange(self, newtype, **kwargs):
+		# convert 'Z' and 'M' lines
 		supportedlines = ['Z', 'M']
 		if any(i in self.type for i in supportedlines):
 			if newtype == 'M':
@@ -122,6 +124,7 @@ class Gline:
 			raise TypeError(f'this module can only be used on lines of type {supportedlines}')
 
 	def fln(self, newfln=''):
+		# return the current file line number or set it to a new one if supplied as 'N00000' format
 		if newfln == '':
 			if hasattr(self, 'fln'):
 				return self.fln
