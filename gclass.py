@@ -205,10 +205,8 @@ class Gfile:
 	def movelist(self, newmoves=''):
 		if newmoves == '':
 			p = []
-			c = 0
 			for i in self.moves:
-				p.append([c, i.type, i.startsy()])
-				c = c + 1
+				p.append(i.fullxy())
 			return p
 		elif type(newmoves) == list:
 			if len(newmoves) == len(self):
@@ -219,7 +217,13 @@ class Gfile:
 		p = []
 		c = 0
 		for i in self.moves:
-			p.append([c, i.type, i.startsy()])
+			p.append([c, i.type, i.startxy()])
 			c = c + 1
 		return p
-		#TODO need a way to re-order moves with this information
+
+	def moveshuffle(self, newmoves):
+		if len(newmoves) == len(self):
+			shufflemoves = []
+			for i in newmoves:
+				shufflemoves.append(self.moves[i])
+			self.moves = shufflemoves
